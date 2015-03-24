@@ -1,6 +1,6 @@
 
 #include "Connection.h"
-#include "ConnectionHandler.h"
+#include "ReceiverHandler.h"
 #include <iostream>
 #include <string>
 #include <sys/types.h>
@@ -8,60 +8,60 @@
 #include <unistd.h>
 #include <thread>
 
-void ReceiveThreadTask(Connection *connection, ConnectionHandler *handle)
+bool ConnectionOpened;
+
+int sendMessage(int socketFD,std::string message)
 {
+	send(socketFD, message.c_str(), message.length()+1,0);
+}
+
+void ReceiveThreadTask(int socketFD)
+{
+	ReceiverHandler receiver(5);
 	char buf[512];
 	std::string str;
 	int rc;
-	int socketFD = *connection->getSocketFD(); 
 
 	while(true)
 	{
-		rc = recv(socketFD, buf, 512, 0);
+		rc = (recv(socketFD, buf, 512, 0));
 		switch(rc)
 		{
 			case -1: 
 			{
 				str = "Error: Receive error";
+				break;
 			}
 			case 0:
 			{
+				ConnectionOpened = false;
 				str = "Error: Connection closed";
+				std::cout<<str<<std::endl;
 				return;
 			}
 			default:
 			{
 				str = std::string(buf);
+				std::string reply= receiver.messageReceived(str);
+				sendMessage(socketFD, reply);
 			}
 		}
-	//	std::cout<<str<<std::endl;
-		handle->messageReceived(connection,str);
+		std::cout<<str<<std::endl;
 	}
 	return;
 }
 
-Connection::Connection(ConnectionHandler *newHandler, int *SFD):socketFD(*SFD), handler(newHandler)
+Connection::Connection(int *SFD):socketFD(*SFD)
 {
-	this->receiveThread = std::thread(ReceiveThreadTask, this, handler);	
+	ConnectionOpened = true;
+	this->receiveThread = std::thread(ReceiveThreadTask, socketFD);	
 	std::string mes;
-	while(true)
+	char buf[512];
+	while(ConnectionOpened)
 	{
 		std::cin>>mes;
-		this->sendMessage(mes);
+		sendMessage(socketFD, mes);
 	}
-}
-
-Connection::Connection(const Connection& con)
-{
-	handler = new ConnectionHandler;
-	*handler = *con.handler;
-}
-
-Connection & Connection::operator = (const Connection &con)
-{
-	if(this != &con)
-		*handler = *(con.handler);
-	return *this;
 }
 
 Connection::~Connection()
@@ -70,14 +70,9 @@ Connection::~Connection()
 	close(this->socketFD);
 }
 
-
 int* Connection::getSocketFD()
 {
 	return &socketFD;
 }
 
-int Connection::sendMessage(std::string message)
-{
-	send(socketFD, message.c_str(), message.length()+1,0);
-}
 

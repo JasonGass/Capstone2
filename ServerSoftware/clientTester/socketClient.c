@@ -23,7 +23,7 @@ void *Receive(void * socket)
 		if(rc > 0)
 		{
 			buf[rc] = (char) NULL;
-			std::cout<<"Received: "<<buf<<std::endl;
+			std::cout<<buf;
 		}
 	}	
 }
@@ -81,6 +81,11 @@ main()
 	//	send(socketHandle, buf, strlen(buf)+1, 0);
 		//				sleep(1);
 		std::cin>>buf;
+		if(strcmp(buf, "close")==0)
+		{
+			close(socketHandle);
+			return 0;
+		}
 		send(socketHandle, buf, strlen(buf)+1, 0); 
 	}
 }

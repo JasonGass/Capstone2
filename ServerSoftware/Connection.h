@@ -3,21 +3,19 @@
 
 #include <iostream>
 #include <thread>
-#include "ConnectionHandler.h"
+#include "ReceiverHandler.h"
 
-class ConnectionHandler;
+class ReceiverHandler;
 class Connection
 {
 	private:
 		int socketFD;
-		ConnectionHandler *handler;
 		std::thread receiveThread;
 	public:
-		Connection(ConnectionHandler * newHandler, int *socketFD);
+		Connection(int *socketFD);
 		Connection(const Connection& con);
 		~Connection();
 		int* getSocketFD();
-		int sendMessage(std::string message);
 		Connection & operator = (const Connection &con);
 };
 
