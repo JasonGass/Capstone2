@@ -16,7 +16,7 @@ std::string ReceiverHandler::messageReceived(std::string message)
 	{
 		case 's':
 		{
-			data.addEntry(message.substring(1));
+			data.addEntry(message.substr(1));
 			return "ack";
 		}
 		case 'g':
