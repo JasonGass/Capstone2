@@ -11,10 +11,12 @@ struct TemperatureData
 	int temperature;
 	struct tm_time;
 };
+	
 struct Device
 {
 	int deviceID;
 	int sensorID;
+	bool isConnected;
 	int temperature_interval;
 	int temperature_current;
 	struct tm temperature_timeSinceReading;
@@ -27,42 +29,11 @@ struct Device
 	int outlet_rule_sensor;
 	int outlet_rule_comparator;
 };
-struct Database
-{
-	Device device1;
-	Device device2;
-	Device device3;
-};
-struct Data
-{
-	struct tm time;
-	int data;
-};
-
-struct Database
-{
-	std::vector<Data> temperatureData;
-	std::vector<Data> motionChanges;
-	int deviceID;
-	int sensorID;
-	int interval;
-	bool controlON;
-};
-struct Rule
-{
-	int deviceID;
-	int value;
-	int comparison;
-	int attribute;
-};
 
 class DatabaseManager
 {
 	private:
-		std::vector<Database> databases;
-		std::queue<int> connectedDatabases;
-		int findDatabaseIndex(int deviceID);
-		std::vector<Rule> rules;
+		std::vector<Device> database;
 	public:
 		const int NONE = 0;
 		const int TEMP = 1;
@@ -72,29 +43,34 @@ class DatabaseManager
 		const int LESSTHAN = 1;
 		
 		DatabaseManager();
-		int findControlIndex();
-		void connectToDatabase(int deviceID);
-		void connectToDatabaseTask(int deviceID);
-		void addTemperatureData(int deviceID, int data);
-		void addMotionChange(int deviceID, int data);
-		void changeSensor(int deviceID, int newSensorID);
-		int getSensor(int deviceID);
-		std::string getTemperatureRecent(int deviceID, int number);
-		std::string getMotionChangesRecent(int deviceID, int number);
+		void setSensorID(int deviceID, int sensorID);
+		void setIsConnected(int deviceID, bool connected);
+		void setTemperatureInterval(int deviceID, int interval);
+		void setTemperatureCurrent(int deviceID, int temperature);
+		void setMotionDelay(int deviceID, int delay);
+		void setMotionStatus(int deviceID, bool motion);
+		void setOutletStatus(int deviceID, bool powerOn);
+		void setOutletRule(int outlet_deviceID, int sensor_deviceID, int sensor, int value, int comparator);
+		
+		int getSensorID(int deviceID);
+		bool getIsConnected(int deviceID);
+		int getTemperatureInterval(int deviceID);
 		int getTemperatureCurrent(int deviceID);
-		int getMotionChangesCurrent(int deviceID);
-		void addRule(int deviceID, int value, int comparison, int attribute);
-		void removeRule(int deviceID, int value, int comparison, int attribute);
-		std::string getRules();
-		void setInterval(int deviceID, int newInterval);
-		int getInterval(int deviceID);
-		std::string checkForUpdates();
-		int validateRule(Rule rule);
-		bool empty();
-		int front();
-		void pop();
-		void printDatabase(int deviceID);
+		std::string getTemperatureCurrentString(int deviceID);
+		int getMotionDelay(int deviceID);
+		bool getMotionStatus(int deviceID);
+		std::string getMotionStatusString(int deviceID);
+		bool getOutletStatus(int deviceID);
+		int getOutletRule_deviceID(int deviceID);
+		int getOutletRule_sensor(int deviceID);
+		int getOutletRule_value(int deviceID);
+		int getOutletRule_comparator(int deviceID);
 
+		bool checkRules();
+
+		void printDatabase();
+		void saveDatabase();
+		void loadDatabase();
 };
 
 #endif

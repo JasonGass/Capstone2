@@ -42,48 +42,48 @@ std::string respond(std::string message, int id)
 		case 2:
 			if(command[0] == "get" && command[1] == "sensor")
 			{	
-				return std::to_string(dbm.getSensor(id));
+//				return std::to_string(dbm.getSensor(id));
 			}
 			else if(command[0] == "get" && command[1] == "rule")
 			{	
-				return dbm.getRules();
+//				return dbm.getRules();
 			}
 			break;
 		case 3:
 			if(command[0] == "add" && command[1] == "temp" && is_number(command[2])) 
 			{	
-				dbm.addTemperatureData(id,std::stoi(command[2]));
-				return std::to_string(dbm.getInterval(id));
+//				dbm.addTemperatureData(id,std::stoi(command[2]));
+//				return std::to_string(dbm.getInterval(id));
 			}
 			else if(command[0] == "get" && command[1] == "temp" && is_number(command[2]))
 			{	
 				int number = std::stoi(command[2]);
-				return dbm.getTemperatureRecent(id,std::stoi(command[2]));
+//				return dbm.getTemperatureRecent(id,std::stoi(command[2]));
 			}
 			else if(command[0] == "add" && command[1] == "motion" && is_number(command[2]))
 			{	
-				dbm.addMotionChange(id,std::stoi(command[2]));
+////				dbm.addMotionChange(id,std::stoi(command[2]));
 				return "ACK";
 			}
 			else if(command[0] == "get" && command[1] == "motion" && is_number(command[2]))
 			{	
-				return dbm.getMotionChangesRecent(id,std::stoi(command[2]));
+//				return dbm.getMotionChangesRecent(id,std::stoi(command[2]));
 			}
 			else if(command[0] == "set" && command[1] == "sensor" && is_number(command[2]))
 			{	
-				dbm.changeSensor(id, std::stoi(command[2]));
+//				dbm.changeSensor(id, std::stoi(command[2]));
 				return "ACK";
 			}
 			break;
 		case 6:
 			if(command[0] == "add" && command[1] == "rule" && is_number(command[2])  && is_number(command[3]) && is_number(command[4]) && is_number(command[5]))
 			{	
-				dbm.addRule(std::stoi(command[2]), std::stoi(command[3]),std::stoi(command[4]),std::stoi(command[5]));
+//				dbm.addRule(std::stoi(command[2]), std::stoi(command[3]),std::stoi(command[4]),std::stoi(command[5]));
 				return "ACk";
 			}
 			else if(command[0] == "rem" && command[1] == "rule" && is_number(command[2])  && is_number(command[3]) && is_number(command[4]) && is_number(command[5]))
 			{	
-				dbm.removeRule(std::stoi(command[2]), std::stoi(command[3]),std::stoi(command[4]),std::stoi(command[5]));
+//				dbm.removeRule(std::stoi(command[2]), std::stoi(command[3]),std::stoi(command[4]),std::stoi(command[5]));
 				return "ACk";
 			}			
 	}
@@ -102,7 +102,7 @@ void writeThreadTask()
 		}
 		if (message.substr(0,1)=="d")
 		{
-			dbm.printDatabase(std::stoi(message.substr(1)));
+//			dbm.printDatabase(std::stoi(message.substr(1)));
 		}
 		else if (message.find(":")!=std::string::npos)
 		{
@@ -132,13 +132,9 @@ int main()
 		}
 		while(!cm.empty())
 		{
-			dbm.connectToDatabase(cm.getDeviceID(cm.front()));	
+			//dbm.isConnected(cm.getDeviceID(cm.front()),true);
+			rec.createNewReceiverThread(cm.front());
 			cm.pop();
-		}
-		while(!dbm.empty())
-		{
-			rec.createNewReceiverThread(cm.getSocketFD(dbm.front()));
-			dbm.pop();
 		}
 		while(!rec.empty())
 		{
@@ -150,11 +146,11 @@ int main()
 			std::cout<<id<<":"<<rec.front().message<<std::endl;
 			rec.pop();
 		}
-		std::string event = dbm.checkForUpdates();
-		if(event != "")
-		{
+	//	std::string event = dbm.checkForUpdates();
+	//	if(event != "")
+	//	{
 		//	packet
-		}
+	//	}
 		std::cout.flush();
 		sleep(1);
 	}
