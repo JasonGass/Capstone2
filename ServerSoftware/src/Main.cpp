@@ -37,55 +37,94 @@ bool is_number(const std::string& s)
 std::string respond(std::string message, int id)
 {
 	std::vector<std::string> command = split(",", message);
+	int deviceID = std::stoi(command[0]);
 	switch (command.size())
 	{
-		case 2:
-			if(command[0] == "get" && command[1] == "sensor")
-			{	
-//				return std::to_string(dbm.getSensor(id));
+		case 3: 
+			if(command[1] == "get" && command[2] == "sensorID")
+			{
+				return std::to_string(dbm.getSensorID(deviceID));
 			}
-			else if(command[0] == "get" && command[1] == "rule")
+		case 4:
+			if(command[1] == "set" && command[2] == "sensorID" && is_number(command[3]))
 			{	
-//				return dbm.getRules();
+				dbm.setSensorID(deviceID, std::stoi(command[3]));
+				return "";
 			}
-			break;
-		case 3:
-			if(command[0] == "add" && command[1] == "temp" && is_number(command[2])) 
+			if(command[1] == "get" && command[2] == "temp" && command[3] == "interval")
 			{	
-//				dbm.addTemperatureData(id,std::stoi(command[2]));
-//				return std::to_string(dbm.getInterval(id));
+				return std::to_string(dbm.getTemperatureInterval(deviceID));
 			}
-			else if(command[0] == "get" && command[1] == "temp" && is_number(command[2]))
+			if(command[1] == "get" && command[2] == "temp" && command[3] == "current")
 			{	
-				int number = std::stoi(command[2]);
-//				return dbm.getTemperatureRecent(id,std::stoi(command[2]));
+				return std::to_string(dbm.getTemperatureCurrent(deviceID));;
 			}
-			else if(command[0] == "add" && command[1] == "motion" && is_number(command[2]))
+			if(command[1] == "get" && command[2] == "motion" && command[3] == "delay")
 			{	
-////				dbm.addMotionChange(id,std::stoi(command[2]));
-				return "ACK";
+				return std::to_string(dbm.getMotionDelay(deviceID));;
 			}
-			else if(command[0] == "get" && command[1] == "motion" && is_number(command[2]))
+			if(command[1] == "get" && command[2] == "motion" && command[3] == "current")
 			{	
-//				return dbm.getMotionChangesRecent(id,std::stoi(command[2]));
+				return std::to_string(dbm.getMotionStatus(deviceID));;
 			}
-			else if(command[0] == "set" && command[1] == "sensor" && is_number(command[2]))
+			if(command[1] == "get" && command[2] == "outlet" && command[3] == "status")
 			{	
-//				dbm.changeSensor(id, std::stoi(command[2]));
-				return "ACK";
+				return std::to_string(dbm.getOutletStatus(deviceID));;
 			}
 			break;
-		case 6:
-			if(command[0] == "add" && command[1] == "rule" && is_number(command[2])  && is_number(command[3]) && is_number(command[4]) && is_number(command[5]))
+		case 5:
+			if(command[1] == "set" && command[2] == "temp" && command[3] == "interval" && is_number(command[4]))
 			{	
-//				dbm.addRule(std::stoi(command[2]), std::stoi(command[3]),std::stoi(command[4]),std::stoi(command[5]));
-				return "ACk";
+				dbm.setTemperatureInterval(deviceID,std::stoi(command[4]));
+				return "";
 			}
-			else if(command[0] == "rem" && command[1] == "rule" && is_number(command[2])  && is_number(command[3]) && is_number(command[4]) && is_number(command[5]))
+			if(command[1] == "set" && command[2] == "temp" && command[3] == "current" && is_number(command[4]))
 			{	
-//				dbm.removeRule(std::stoi(command[2]), std::stoi(command[3]),std::stoi(command[4]),std::stoi(command[5]));
-				return "ACk";
-			}			
+				dbm.setTemperatureCurrent(deviceID, std::stoi(command[4]));
+				return std::to_string(dbm.getTemperatureInterval(deviceID));
+			}
+			if(command[1] == "set" && command[2] == "motion" && command[3] == "delay" && is_number(command[4]))
+			{	
+				dbm.setMotionDelay(deviceID, std::stoi(command[4]));
+				return "";
+			}
+			if(command[1] == "set" && command[2] == "motion" && command[3] == "current" && is_number(command[4]))
+			{	
+				dbm.setMotionStatus(deviceID, std::stoi(command[4]));
+				return std::to_string(dbm.getMotionDelay(deviceID));
+			}
+			if(command[1] == "set" && command[2] == "outlet" && command[3] == "status" && is_number(command[4]))
+			{	
+				dbm.setOutletStatus(deviceID, std::stoi(command[4]));
+				return "";
+			}
+			if(command[1] == "get" && command[2] == "outlet" && command[3] == "rule" && command[4] == "deviceID")
+			{	
+				return std::to_string(dbm.getOutletRule_deviceID(deviceID));
+			}
+			if(command[1] == "get" && command[2] == "outlet" && command[3] == "rule" && command[4] == "value")
+			{	
+				return std::to_string(dbm.getOutletRule_value(deviceID));
+			}
+			if(command[1] == "get" && command[2] == "outlet" && command[3] == "rule" && command[4] == "sensor")
+			{	
+				return std::to_string(dbm.getOutletRule_sensor(deviceID));
+			}
+			if(command[1] == "get" && command[2] == "outlet" && command[3] == "rule" && command[4] == "comparator")
+			{	
+				return std::to_string(dbm.getOutletRule_comparator(deviceID));
+			}
+			break;
+		case 8: 
+			if(command[1] == "set" && command[2] == "outlet" && command[3] == "rule" && is_number(command[4]) && is_number(command[5]) && is_number(command[6]) && is_number(command[7]))
+			{	
+				dbm.setOutletRule(deviceID, 
+								  std::stoi(command[4]),
+								  std::stoi(command[5]),
+								  std::stoi(command[6]),
+								  std::stoi(command[7]));
+				return "";
+			}
 	}
 	return "Invalid Command";
 }
@@ -142,15 +181,27 @@ int main()
 			Packet packet;
 			packet.socketFD = rec.front().socketFD;
 			packet.message = respond(rec.front().message, id);;
-			sender.push(packet);			
+			if(packet.message != "")
+				sender.push(packet);			
 			std::cout<<id<<":"<<rec.front().message<<std::endl;
 			rec.pop();
 		}
-	//	std::string event = dbm.checkForUpdates();
-	//	if(event != "")
-	//	{
-		//	packet
-	//	}
+		int event = dbm.checkRules();
+		if(event > 999 && event < 1004 )
+		{
+			Packet packet;
+			packet.socketFD = cm.getSocketFD(event);
+			packet.message = std::to_string(dbm.getOutletStatus(event));
+			sender.push(packet);
+		}
+		event = dbm.checkTemperature();
+		if(event > 999 && event < 1004 )
+		{
+			Packet packet;
+			packet.socketFD = cm.getSocketFD(event);
+			packet.message = "get,temp";
+			sender.push(packet);
+		}
 		std::cout.flush();
 		sleep(1);
 	}

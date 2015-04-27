@@ -19,10 +19,10 @@ struct Device
 	bool isConnected;
 	int temperature_interval;
 	int temperature_current;
-	struct tm temperature_timeSinceReading;
+	std::string temperature_timeSinceReading;
 	int motion_delay;
 	bool motion_status;
-	struct tm motion_timeSinceChange;
+	std::string motion_timeSinceChange;
 	bool outlet_on;
 	int outlet_rule_deviceID;
 	int outlet_rule_value;
@@ -34,9 +34,10 @@ class DatabaseManager
 {
 	private:
 		std::vector<Device> database;
+		time_t lastRead;
 	public:
 		const int NONE = 0;
-		const int TEMP = 1;
+		const int TEMPERATURE = 1;
 		const int MOTION = 2;
 		const int OUTLET = 3;
 		const int GREATERTHAN = 0;
@@ -56,17 +57,18 @@ class DatabaseManager
 		bool getIsConnected(int deviceID);
 		int getTemperatureInterval(int deviceID);
 		int getTemperatureCurrent(int deviceID);
-		std::string getTemperatureCurrentString(int deviceID);
+		std::string getTemperatureTime(int deviceID);
 		int getMotionDelay(int deviceID);
 		bool getMotionStatus(int deviceID);
-		std::string getMotionStatusString(int deviceID);
+		std::string getMotionStatusTime(int deviceID);
 		bool getOutletStatus(int deviceID);
 		int getOutletRule_deviceID(int deviceID);
 		int getOutletRule_sensor(int deviceID);
 		int getOutletRule_value(int deviceID);
 		int getOutletRule_comparator(int deviceID);
 
-		bool checkRules();
+		int checkRules();
+		int checkTemperature();
 
 		void printDatabase();
 		void saveDatabase();
