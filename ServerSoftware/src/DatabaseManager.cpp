@@ -202,7 +202,7 @@ void DatabaseManager::printDatabase()
 void DatabaseManager::saveDatabase() 
 {
 	std::ofstream file;
-	file.open("/home/server/Capstone2/ServerSoftware/bin/device_data.txt");
+	file.open("./bin/device_data.txt");
 	if (file.is_open())
 	{
 		for(auto &it : database)
@@ -229,7 +229,7 @@ void DatabaseManager::loadDatabase()
 {
 	std::ifstream file;
 	int len;
-	file.open("/home/server/Capstone2/ServerSoftware/bin/device_data.txt");
+	file.open("./bin/device_data.txt");
 	if (file.is_open())
 	{
 		for(auto &it : database)
