@@ -35,12 +35,19 @@ void Receiver::ReceiverThreadTask(int socketFD)
 			}
 			default:
 			{
-				Packet packet;
-				packet.socketFD = socketFD;
 				buf[rc] = '\0';
-				packet.message = std::string(buf);
-				incomingMessages.push(packet);
-				std::cout<<packet.message<<std::endl;
+				std::string message = std::string(buf);
+				size_t pos = 0;
+				while((pos = message.find(";")) != std::string::npos)
+				{	
+					Packet packet;
+					packet.socketFD = socketFD;
+					packet.message = message.substr(0,pos);;
+					incomingMessages.push(packet);
+					std::cout<<packet.message<<std::endl;
+					message.erase(0,pos+1);
+				}
+
 			}
 		}
 	}

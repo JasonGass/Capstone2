@@ -34,17 +34,23 @@ bool is_number(const std::string& s)
 	return !s.empty() && std::find_if(s.begin(), s.end(), [](char c) { return !std::isdigit(c);}) == s.end();
 }
 
-std::string respond(std::string message, int id)
+std::string respond(std::string message, int socketFD)
 {
 	std::vector<std::string> command = split(",", message);
+	if (!is_number(command[0]))
+		return "";
 	int deviceID = std::stoi(command[0]);
 	switch (command.size())
 	{
+		case 1:
+			cm.linkSocketFDAndDeviceID(socketFD,deviceID);
+			return "";
 		case 3: 
 			if(command[1] == "get" && command[2] == "sensorID")
 			{
 				return std::to_string(dbm.getSensorID(deviceID));
 			}
+			break;
 		case 4:
 			if(command[1] == "set" && command[2] == "sensorID" && is_number(command[3]))
 			{	
@@ -167,20 +173,14 @@ int main()
 		while(!cl.empty())
 		{
 			cm.createNewConnection(cl.front());
+			rec.createNewReceiverThread(cl.front());
 			cl.pop();
-		}
-		while(!cm.empty())
-		{
-			//dbm.isConnected(cm.getDeviceID(cm.front()),true);
-			rec.createNewReceiverThread(cm.front());
-			cm.pop();
 		}
 		while(!rec.empty())
 		{
-			int id = cm.getDeviceID(rec.front().socketFD);
 			Packet packet;
 			packet.socketFD = rec.front().socketFD;
-			packet.message = respond(rec.front().message, id);;
+			packet.message = respond(rec.front().message,rec.front().socketFD );
 			if(packet.message != "")
 				sender.push(packet);			
 			rec.pop();
@@ -188,18 +188,24 @@ int main()
 		int event = dbm.checkRules();
 		if(event > 999 && event < 1004 )
 		{
-			Packet packet;
-			packet.socketFD = cm.getSocketFD(event);
-			packet.message = "set,"+std::to_string(dbm.getOutletStatus(event));
-			sender.push(packet);
+			if (cm.getSocketFD(event) != 0)
+			{
+				Packet packet;
+				packet.socketFD = cm.getSocketFD(event);
+				packet.message = "set,"+std::to_string(dbm.getOutletStatus(event));
+				sender.push(packet);
+			}
 		}
 		event = dbm.checkTemperature();
 		if(event > 999 && event < 1004 )
 		{
-			Packet packet;
-			packet.socketFD = cm.getSocketFD(event);
-			packet.message = "get,temp";
-			sender.push(packet);
+			if (cm.getSocketFD(event) != 0)
+			{
+				Packet packet;
+				packet.socketFD = cm.getSocketFD(event);
+				packet.message = "get,temp";
+				sender.push(packet);
+			}
 		}
 		std::cout.flush();
 		sleep(1);

@@ -6,6 +6,7 @@
 #include <thread>
 #include <algorithm>
 
+int defaultDeviceID = 1;
 bool is_Integer(const std::string& s)
 {
         return !s.empty() && std::find_if(s.begin(), s.end(), [](char c) { return !std::isdigit(c);}) == s.end();
@@ -14,40 +15,31 @@ bool is_Integer(const std::string& s)
 ConnectionManager::ConnectionManager()
 {
 }
-void ConnectionManager::createNewConnectionTask(connection newConnection)
+void ConnectionManager::linkSocketFDAndDeviceID(int socketFD, int deviceID)
 {
-	std::string message = "a"; 
-	int deviceID;
-	while(!is_Integer(message))
+	auto i = std::begin(connections);
+	while( i != std::end(connections))
 	{
-		std::cout<<"Waiting deviceID from MCU"<<std::endl;
-		char buf[512];
-		int rc;
-		rc = recv(newConnection.socketFD, buf, 512, 0);
-		message = std::string(buf);
-	}
-	std::cout<<"Connection Successful"<<std::endl;
-	deviceID = stoi(message);
-	for(int i = 0; i < connections.size(); i++)
-	{
-		if (deviceID == connections.at(i).deviceID)
+		if (deviceID == i->deviceID || socketFD == i->socketFD)
 		{
-			connections.at(i).socketFD = newConnection.socketFD;
-			return;
+			i = connections.erase(i);
 		}
+		else
+			++i;
 	}
+	connection newConnection;
+	newConnection.socketFD = socketFD;
 	newConnection.deviceID = deviceID;
 	connections.push_back(newConnection);
-	finishedConnections.push(newConnection.socketFD);
 }
 
 void ConnectionManager::createNewConnection(int socketFD)
 {
 	connection newConnection;
 	newConnection.socketFD = socketFD;
-	newConnection.deviceID = -1;
-	std::thread newConnectionThread(&ConnectionManager::createNewConnectionTask, this, newConnection);
-	newConnectionThread.detach();
+	newConnection.deviceID = defaultDeviceID;
+	defaultDeviceID++;
+	connections.push_back(newConnection);
 	return;
 }
 
@@ -71,27 +63,11 @@ int ConnectionManager::getSocketFD(int deviceID)
 	return 0;
 }
 
-bool ConnectionManager::empty()
-{
-	return finishedConnections.empty();
-}
-
-int ConnectionManager::front()
-{
-	return finishedConnections.front();
-}
-
-void ConnectionManager::pop()
-{
-	finishedConnections.pop();
-	return;
-}
-
 void ConnectionManager::listConnections()
 {
 	std::cout<<"Current Connections"<<std::endl;
 	for(int i = 0; i<connections.size(); i++)
 	{
-		std::cout<<connections.at(i).deviceID<<std::endl;
+		std::cout<<"SocketFD: "<< connections.at(i).socketFD<<", DeviceID: "<<connections.at(i).deviceID<<std::endl;
 	}
 }
