@@ -4,19 +4,30 @@
 #include <string>
 #include <iostream>
 #include <thread>
+#include <algorithm>
+
+bool is_Integer(const std::string& s)
+{
+        return !s.empty() && std::find_if(s.begin(), s.end(), [](char c) { return !std::isdigit(c);}) == s.end();
+}
 
 ConnectionManager::ConnectionManager()
 {
 }
 void ConnectionManager::createNewConnectionTask(connection newConnection)
 {
-	char buf[512];
-	std::string message;
-	int rc, deviceID;
-	rc = recv(newConnection.socketFD, buf, 512, 0);
-	message = std::string(buf);
+	std::string message = "a"; 
+	int deviceID;
+	while(!is_Integer(message))
+	{
+		std::cout<<"Waiting deviceID from MCU"<<std::endl;
+		char buf[512];
+		int rc;
+		rc = recv(newConnection.socketFD, buf, 512, 0);
+		message = std::string(buf);
+	}
+	std::cout<<"Connection Successful"<<std::endl;
 	deviceID = stoi(message);
-	send(newConnection.socketFD, buf, 512, 0);
 	for(int i = 0; i < connections.size(); i++)
 	{
 		if (deviceID == connections.at(i).deviceID)

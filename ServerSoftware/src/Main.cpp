@@ -81,7 +81,7 @@ std::string respond(std::string message, int id)
 			if(command[1] == "set" && command[2] == "temp" && command[3] == "current" && is_number(command[4]))
 			{	
 				dbm.setTemperatureCurrent(deviceID, std::stoi(command[4]));
-				return std::to_string(dbm.getTemperatureInterval(deviceID));
+				return "";
 			}
 			if(command[1] == "set" && command[2] == "motion" && command[3] == "delay" && is_number(command[4]))
 			{	
@@ -91,7 +91,7 @@ std::string respond(std::string message, int id)
 			if(command[1] == "set" && command[2] == "motion" && command[3] == "current" && is_number(command[4]))
 			{	
 				dbm.setMotionStatus(deviceID, std::stoi(command[4]));
-				return std::to_string(dbm.getMotionDelay(deviceID));
+				return "set,"+std::to_string(dbm.getMotionDelay(deviceID));
 			}
 			if(command[1] == "set" && command[2] == "outlet" && command[3] == "status" && is_number(command[4]))
 			{	
@@ -183,7 +183,6 @@ int main()
 			packet.message = respond(rec.front().message, id);;
 			if(packet.message != "")
 				sender.push(packet);			
-			std::cout<<id<<":"<<rec.front().message<<std::endl;
 			rec.pop();
 		}
 		int event = dbm.checkRules();
@@ -191,7 +190,7 @@ int main()
 		{
 			Packet packet;
 			packet.socketFD = cm.getSocketFD(event);
-			packet.message = std::to_string(dbm.getOutletStatus(event));
+			packet.message = "set,"+std::to_string(dbm.getOutletStatus(event));
 			sender.push(packet);
 		}
 		event = dbm.checkTemperature();

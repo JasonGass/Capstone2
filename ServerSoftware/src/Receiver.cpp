@@ -40,6 +40,7 @@ void Receiver::ReceiverThreadTask(int socketFD)
 				buf[rc] = '\0';
 				packet.message = std::string(buf);
 				incomingMessages.push(packet);
+				std::cout<<packet.message<<std::endl;
 			}
 		}
 	}

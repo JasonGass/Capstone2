@@ -11,6 +11,8 @@ struct tm getTime()
 	return *localtime(&t);
 }
 
+bool updateOutlet = false; 
+
 DatabaseManager::DatabaseManager()
 {
 	Device device;
@@ -23,6 +25,7 @@ DatabaseManager::DatabaseManager()
 	device3.deviceID = 1002;
 	database.push_back(device3);
 	loadDatabase();
+	lastRead = time(NULL);
 }
 
 void DatabaseManager::setSensorID(int deviceID, int sensorID)
@@ -76,6 +79,7 @@ void DatabaseManager::setMotionStatus(int deviceID, bool motion)
 void DatabaseManager::setOutletStatus(int deviceID, bool powerOn)
 {
 	database[deviceID-1000].outlet_on = powerOn;
+	updateOutlet=true;
 	saveDatabase();
 }
 
@@ -149,6 +153,12 @@ int DatabaseManager::checkRules()
 	{
 		if(it.sensorID == OUTLET)
 		{
+			if (updateOutlet)
+			{
+				updateOutlet = false;
+				return it.deviceID;
+			}
+			/*
 			if (database[it.outlet_rule_deviceID-1000].sensorID != it.outlet_rule_sensor)
 				break;
 			int value;
@@ -172,6 +182,7 @@ int DatabaseManager::checkRules()
 				it.outlet_on = comparison;
 				return it.deviceID;
 			}
+			*/
 			return 0;
 		}
 	}
@@ -187,7 +198,6 @@ int DatabaseManager::checkTemperature()
 			now = time(NULL);
 			if(std::difftime(now, lastRead) > it.temperature_interval)
 			{
-			std::cout<<difftime(now,lastRead)<<std::endl;
 				return it.deviceID;
 			}
 			else 
