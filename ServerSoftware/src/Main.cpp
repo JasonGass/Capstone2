@@ -169,6 +169,7 @@ int main()
 	Receiver rec;
 	std::thread writeThread(writeThreadTask);
 	int size;
+	int k=0;
 	while(1){
 		while(!cl.empty())
 		{
@@ -182,31 +183,31 @@ int main()
 			packet.socketFD = rec.front().socketFD;
 			packet.message = respond(rec.front().message,rec.front().socketFD );
 			if(packet.message != "")
-				sender.push(packet);			
+			{
+				sender.push(packet);
+			}			
 			rec.pop();
 		}
-		int event = dbm.checkRules();
-		if(event > 999 && event < 1004 )
+		if (dbm.getSensorID(1001) ==3 && cm.getSocketFD(1001) != 0)
 		{
-			if (cm.getSocketFD(event) != 0)
-			{
-				Packet packet;
-				packet.socketFD = cm.getSocketFD(event);
-				packet.message = "set,"+std::to_string(dbm.getOutletStatus(event));
-				sender.push(packet);
-			}
+			int event = dbm.checkRules();
+			Packet packet;
+			packet.socketFD = cm.getSocketFD(1001);
+			packet.message = "set,"+std::to_string(dbm.getOutletStatus(1001));
+			sender.push(packet);
 		}
-		event = dbm.checkTemperature();
-		if(event > 999 && event < 1004 )
+
+		if (dbm.getSensorID(1001) ==1 && cm.getSocketFD(1001) != 0)
 		{
-			if (cm.getSocketFD(event) != 0)
-			{
-				Packet packet;
-				packet.socketFD = cm.getSocketFD(event);
+			int event = dbm.checkTemperature();
+			Packet packet;
+			packet.socketFD = cm.getSocketFD(1001);
+			packet.message = "wake";
+			if(event == 1001)
 				packet.message = "get,temp";
-				sender.push(packet);
-			}
+			sender.push(packet);
 		}
+
 		std::cout.flush();
 		sleep(1);
 	}

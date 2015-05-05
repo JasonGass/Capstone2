@@ -192,7 +192,7 @@ int DatabaseManager::checkTemperature()
 {
 	for (auto &it : database)
 	{
-		if (it.sensorID == TEMPERATURE)
+		if (it.sensorID == TEMPERATURE && it.deviceID == 1001)
 		{
 			time_t now;
 			now = time(NULL);
@@ -212,7 +212,7 @@ void DatabaseManager::printDatabase()
 void DatabaseManager::saveDatabase() 
 {
 	std::ofstream file;
-	file.open("./bin/device_data.txt");
+	file.open("./device_data.txt");
 	if (file.is_open())
 	{
 		for(auto &it : database)
@@ -239,7 +239,7 @@ void DatabaseManager::loadDatabase()
 {
 	std::ifstream file;
 	int len;
-	file.open("./bin/device_data.txt");
+	file.open("./device_data.txt");
 	if (file.is_open())
 	{
 		for(auto &it : database)
