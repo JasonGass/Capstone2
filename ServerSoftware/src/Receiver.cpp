@@ -11,6 +11,9 @@ Receiver::Receiver()
 
 }
 
+/*********************************************
+ * Task that is ran by receiver thread for each connection.
+ ********************************************/
 void Receiver::ReceiverThreadTask(int socketFD)
 {
 	char buf[512];
@@ -35,6 +38,8 @@ void Receiver::ReceiverThreadTask(int socketFD)
 			}
 			default:
 			{
+				//Parses incoming message by ';' into commands.
+				//Adds command to incoming messages queue.
 				buf[rc] = '\0';
 				std::string message = std::string(buf);
 				size_t pos = 0;
@@ -53,32 +58,51 @@ void Receiver::ReceiverThreadTask(int socketFD)
 	}
 }
 
+
+/*********************************************
+ * Starts a new thread and detachs from main thread.
+ ********************************************/
 void Receiver::createNewReceiverThread(int socketFD)
 {
 	std::thread receiverThread(&Receiver::ReceiverThreadTask,this,socketFD);
 	receiverThread.detach();
 }
 
+/*********************************************
+ * Returns queue of messages that have been received
+ ********************************************/
 std::queue<Packet> Receiver::getIncomingMessages()
 {
 	return incomingMessages;
 }
 
+/*********************************************
+ * Returns number of messages that have been received and are waiting to be processed.
+ ********************************************/
 int Receiver::size()
 {
 	return incomingMessages.size();
 }
 
+/*********************************************
+ * Returns first received message.
+ ********************************************/
 Packet Receiver::front()
 {
 	return incomingMessages.front();
 }
 
+/*********************************************
+ * Removes oldest received message.
+ ********************************************/
 void Receiver::pop()
 {
 	incomingMessages.pop();
 }
 
+/*********************************************
+ * Checks if any new messages have been received.
+ ********************************************/
 bool Receiver::empty()
 {
 	return incomingMessages.empty();

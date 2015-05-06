@@ -4,6 +4,9 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+/******************************
+ * Thread to empty queue and send messages
+ *****************************/
 void Sender::senderThreadTask()
 {
 	while(1){
@@ -18,12 +21,18 @@ void Sender::senderThreadTask()
 	}
 }
 
+/******************************
+ * Constructor: Creates new send thread and detachs from main thread.
+ *****************************/
 Sender::Sender()
 {
 	std::thread senderThread(&Sender::senderThreadTask, this);	
 	senderThread.detach();
 }
 
+/******************************
+ * Adds new message to send queue
+ *****************************/
 void Sender::push(Packet packet)
 {
 	messagesToSend.push(packet);

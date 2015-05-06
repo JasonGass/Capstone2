@@ -4,30 +4,33 @@
 #include <thread>
 #include <iomanip>
 
-
+/*****************************
+ * Returns current time
+ ****************************/
 struct tm getTime()
 {
 	time_t t = time(0);
 	return *localtime(&t);
 }
 
-bool updateOutlet = false; 
-
+/*****************************
+ * Constructor: Populates database vector then loads saved settings.
+ ****************************/
 DatabaseManager::DatabaseManager()
 {
-	Device device;
-	device.deviceID = 1000;
-	database.push_back(device);
-	Device device2;
-	device2.deviceID = 1001;
-	database.push_back(device2);
-	Device device3;
-	device3.deviceID = 1002;
-	database.push_back(device3);
+	for(int i = 0; i < NUMBER_OF_DEVICES; i++)
+	{
+		Device device;
+		database.push_back(device);
+	}
 	loadDatabase();
 	lastRead = time(NULL);
 }
 
+/*****************************
+ * Getters and setters for the device variables.
+ * Any unique lines are commented in function
+ ****************************/
 void DatabaseManager::setSensorID(int deviceID, int sensorID)
 {
 	if(sensorID < 4)
@@ -49,6 +52,7 @@ void DatabaseManager::setTemperatureInterval(int deviceID, int interval)
 
 void DatabaseManager::setTemperatureCurrent(int deviceID, int temperature)
 {
+	//Adds timestamp so server knows when last data collection occured.
 	lastRead = time(NULL);
 	database[deviceID -1000].temperature_current = temperature;
 	struct tm time = getTime();
@@ -67,6 +71,7 @@ void DatabaseManager::setMotionDelay(int deviceID, int delay)
 
 void DatabaseManager::setMotionStatus(int deviceID, bool motion)
 {
+	//Adds timestamp so server knows when last motion change occured.
 	database[deviceID -1000].motion_status = motion;
 	struct tm time = getTime();
 	char buffer[100];	
@@ -79,16 +84,6 @@ void DatabaseManager::setMotionStatus(int deviceID, bool motion)
 void DatabaseManager::setOutletStatus(int deviceID, bool powerOn)
 {
 	database[deviceID-1000].outlet_on = powerOn;
-	updateOutlet=true;
-	saveDatabase();
-}
-
-void DatabaseManager::setOutletRule(int outlet_deviceID, int sensor_deviceID, int sensor, int value, int comparator)
-{
-	database[outlet_deviceID-1000].outlet_rule_deviceID = sensor_deviceID;
-	database[outlet_deviceID-1000].outlet_rule_value = value;
-	database[outlet_deviceID-1000].outlet_rule_sensor = sensor;
-	database[outlet_deviceID-1000].outlet_rule_comparator = comparator;
 	saveDatabase();
 }
 
@@ -130,64 +125,10 @@ bool DatabaseManager::getOutletStatus(int deviceID)
 {
 	return database[deviceID-1000].outlet_on;;
 }
-int DatabaseManager::getOutletRule_deviceID(int deviceID) 
-{
-	return database[deviceID-1000].outlet_rule_deviceID;;
-}
-int DatabaseManager::getOutletRule_sensor(int deviceID) 
-{
-	return database[deviceID-1000].outlet_rule_sensor;;
-}
-int DatabaseManager::getOutletRule_value(int deviceID) 
-{
-	return database[deviceID-1000].outlet_rule_value;;
-}
-int DatabaseManager::getOutletRule_comparator(int deviceID) 
-{
-	return database[deviceID-1000].outlet_rule_comparator;;
-}
-			     
-int DatabaseManager::checkRules() 
-{
-	for(auto &it : database)
-	{
-		if(it.sensorID == OUTLET)
-		{
-			if (updateOutlet)
-			{
-				updateOutlet = false;
-				return it.deviceID;
-			}
-			/*
-			if (database[it.outlet_rule_deviceID-1000].sensorID != it.outlet_rule_sensor)
-				break;
-			int value;
-			if (it.outlet_rule_sensor == TEMPERATURE)
-				value = database[it.outlet_rule_deviceID-1000].temperature_current;
-			else if (it.outlet_rule_sensor == MOTION)
-				value = database[it.outlet_rule_deviceID-1000].motion_status;;
-			
-			bool comparison= false;
-			if(it.outlet_rule_comparator == GREATERTHAN)
-			{
-				comparison = (it.outlet_rule_value > value);
-			}
-			else if(it.outlet_rule_comparator == LESSTHAN)
-			{
-				comparison = (it.outlet_rule_value < value);
-			}
-			
-			if (comparison != it.outlet_on)
-			{
-				it.outlet_on = comparison;
-				return it.deviceID;
-			}
-			*/
-			return 0;
-		}
-	}
-}
 
+/**********************************
+ * Checks is temperature needs to be updated.
+ **********************************/
 int DatabaseManager::checkTemperature()
 {
 	for (auto &it : database)
@@ -206,9 +147,10 @@ int DatabaseManager::checkTemperature()
 	}
 }
 				     
-void DatabaseManager::printDatabase() 
-{
-}
+
+/**********************************
+ * Saves database vector's device variables to file.
+ **********************************/
 void DatabaseManager::saveDatabase() 
 {
 	std::ofstream file;
@@ -227,14 +169,14 @@ void DatabaseManager::saveDatabase()
 			file << it.motion_status<<std::endl;
 			file << it.motion_timeSinceChange<<std::endl;
 			file << it.outlet_on<<std::endl;
-			file << it.outlet_rule_deviceID<<std::endl;
-			file << it.outlet_rule_value<<std::endl;
-			file << it.outlet_rule_sensor<<std::endl;
-			file << it.outlet_rule_comparator<<std::endl;
 		}
 		file.close();
 	}
 }
+
+/**********************************
+ * Loads the database vector with device variables read in from file.
+ **********************************/
 void DatabaseManager::loadDatabase()
 {
 	std::ifstream file;
@@ -256,10 +198,6 @@ void DatabaseManager::loadDatabase()
 			getline(file,it.motion_timeSinceChange);
 			getline(file,it.motion_timeSinceChange);
 			file >> it.outlet_on;
-			file >> it.outlet_rule_deviceID;
-			file >> it.outlet_rule_value;
-			file >> it.outlet_rule_sensor;
-			file >> it.outlet_rule_comparator;
 		}
 	}
 }

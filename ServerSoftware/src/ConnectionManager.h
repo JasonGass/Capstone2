@@ -3,6 +3,7 @@
 
 #include <vector>
 
+//Struct to make sure each socket FD has a device ID
 struct connection{
 	int socketFD;
 	int deviceID;
@@ -17,6 +18,7 @@ class ConnectionManager
 		int getSocketFD(int deviceID);
 		void listConnections();
 	private:
+		//List of all the current connections
 		std::vector<connection> connections;
 };
 

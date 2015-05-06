@@ -7,6 +7,7 @@
 class Sender
 {
 	private:
+		//Messages that are ready to send.
 		std::queue<Packet> messagesToSend;
 
 	public:

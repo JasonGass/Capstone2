@@ -8,6 +8,7 @@
 class Receiver
 {
 	private:
+		//Queue of messages that have been received.
 		std::queue<Packet> incomingMessages;	
 	public:
 		Receiver();

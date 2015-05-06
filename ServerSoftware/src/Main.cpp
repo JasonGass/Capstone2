@@ -9,11 +9,15 @@
 #include <thread>
 #include <algorithm>
 
-
+ConnectionListener cl;
 ConnectionManager cm;
 Sender sender;
+Receiver rec;
 DatabaseManager dbm;
 
+/******************************************
+ * Splits a string by delimiter string into vector
+ *****************************************/
 std::vector<std::string> split(std::string delimiter, std::string str)
 {
 	std::vector<std::string> delimitedString;
@@ -29,11 +33,17 @@ std::vector<std::string> split(std::string delimiter, std::string str)
 	return delimitedString;
 }
 
+/******************************************
+ * Checks if it is safe to convert string to int
+ *****************************************/
 bool is_number(const std::string& s)
 {
 	return !s.empty() && std::find_if(s.begin(), s.end(), [](char c) { return !std::isdigit(c);}) == s.end();
 }
 
+/******************************************
+ * Returns a response based on the command received.
+ *****************************************/
 std::string respond(std::string message, int socketFD)
 {
 	std::vector<std::string> command = split(",", message);
@@ -104,37 +114,13 @@ std::string respond(std::string message, int socketFD)
 				dbm.setOutletStatus(deviceID, std::stoi(command[4]));
 				return "";
 			}
-			if(command[1] == "get" && command[2] == "outlet" && command[3] == "rule" && command[4] == "deviceID")
-			{	
-				return std::to_string(dbm.getOutletRule_deviceID(deviceID));
-			}
-			if(command[1] == "get" && command[2] == "outlet" && command[3] == "rule" && command[4] == "value")
-			{	
-				return std::to_string(dbm.getOutletRule_value(deviceID));
-			}
-			if(command[1] == "get" && command[2] == "outlet" && command[3] == "rule" && command[4] == "sensor")
-			{	
-				return std::to_string(dbm.getOutletRule_sensor(deviceID));
-			}
-			if(command[1] == "get" && command[2] == "outlet" && command[3] == "rule" && command[4] == "comparator")
-			{	
-				return std::to_string(dbm.getOutletRule_comparator(deviceID));
-			}
-			break;
-		case 8: 
-			if(command[1] == "set" && command[2] == "outlet" && command[3] == "rule" && is_number(command[4]) && is_number(command[5]) && is_number(command[6]) && is_number(command[7]))
-			{	
-				dbm.setOutletRule(deviceID, 
-								  std::stoi(command[4]),
-								  std::stoi(command[5]),
-								  std::stoi(command[6]),
-								  std::stoi(command[7]));
-				return "";
-			}
 	}
 	return "Invalid Command";
 }
 
+/******************************************
+ * Task for sending console input to devices for debugging purposes
+ *****************************************/
 void writeThreadTask()
 {
 	std::string message;
@@ -144,10 +130,6 @@ void writeThreadTask()
 		if (message=="l")
 		{
 			cm.listConnections();
-		}
-		if (message.substr(0,1)=="d")
-		{
-//			dbm.printDatabase(std::stoi(message.substr(1)));
 		}
 		else if (message.find(":")!=std::string::npos)
 		{
@@ -163,20 +145,23 @@ void writeThreadTask()
 	}
 }
 
+/******************************************
+ * Main thread of execution.  
+ *****************************************/
 int main()
 {
-	ConnectionListener cl;
-	Receiver rec;
 	std::thread writeThread(writeThreadTask);
-	int size;
-	int k=0;
 	while(1){
+
+		//While incoming connections
 		while(!cl.empty())
 		{
 			cm.createNewConnection(cl.front());
 			rec.createNewReceiverThread(cl.front());
 			cl.pop();
 		}
+
+		//While incoming messages
 		while(!rec.empty())
 		{
 			Packet packet;
@@ -188,23 +173,31 @@ int main()
 			}			
 			rec.pop();
 		}
-		if (dbm.getSensorID(1001) ==3 && cm.getSocketFD(1001) != 0)
+		
+		//Hack since there is only one mcu in our example
+		int mcuID = 1001;
+
+		//If control circuit is connected to MCU, send status
+		if (dbm.getSensorID(mcuID) ==3 && cm.getSocketFD(mcuID) != 0)
 		{
-			int event = dbm.checkRules();
 			Packet packet;
-			packet.socketFD = cm.getSocketFD(1001);
-			packet.message = "set,"+std::to_string(dbm.getOutletStatus(1001));
+			packet.socketFD = cm.getSocketFD(mcuID);
+			packet.message = "set,"+std::to_string(dbm.getOutletStatus(mcuID));
 			sender.push(packet);
 		}
 
-		if (dbm.getSensorID(1001) ==1 && cm.getSocketFD(1001) != 0)
+		//If temperature circuit is connected to MCU, send either wakeup or get temperature command 
+		if (dbm.getSensorID(mcuID) ==1 && cm.getSocketFD(mcuID) != 0)
 		{
 			int event = dbm.checkTemperature();
 			Packet packet;
-			packet.socketFD = cm.getSocketFD(1001);
-			packet.message = "wake";
-			if(event == 1001)
+			packet.socketFD = cm.getSocketFD(mcuID);
+			//Used to get temperature
+			if(event == mcuID)
 				packet.message = "get,temp";
+			//Used to wake MCU so it is not stuck in blocking recv call
+			else
+				packet.message = "wake";
 			sender.push(packet);
 		}
 

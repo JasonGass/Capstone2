@@ -3,6 +3,7 @@
 
 #include <string>
 
+//Message and socket field descriptor so message goes to correct socket.
 struct Packet
 {
 	int socketFD;

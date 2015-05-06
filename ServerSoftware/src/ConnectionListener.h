@@ -5,7 +5,9 @@
 class ConnectionListener
 {
 	private:
+		//Socket to listen on
 		int socketFD;
+		//Connections that are ready to move on.
 		std::queue<int> incomingConnections; 
 
 	public:
